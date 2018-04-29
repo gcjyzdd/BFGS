@@ -34,5 +34,60 @@
 
 void BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 {
+	size_t n = input.size();
 
+	VectorXd gk(n);
+	VectorXd x0(n);
+	x0 = input;
+	double fit = fun(x0);
+
+	MatrixXd Bk = MatrixXd::Identity(n, n);
+	VectorXd x, dk, sk, yk, valid;
+
+	int k=0, bad = 0;
+	double best = 1e10;
+	while(k<MAX_STEP && bad<stop_step)
+	{
+		fit = fun(x0);
+		if(fit < best - epsilon)
+		{
+			best = fit;
+			bad = 0;
+		}
+		else
+		{
+			bad++;
+		}
+		std::cout<<"k = "<<k<<" fit = "<< fit<<std::endl;
+		dfun(gk, x0);
+		// TODO stop criteria
+		dk = Bk.fullPivHouseholderQr().solve(-gk);
+		// Armijo search
+		int m = 0;
+		int mk = 0;
+		double tmp;
+		tmp = gk.transpose()*dk;
+		while(m<8000)
+		{
+			if( fun(x0+pow(rho,m)*dk) < (fit+sigma*pow(rho,m)*tmp) )
+			{
+				mk = m;
+				break;
+			}
+			m++;
+		}
+		x = x0 + pow(rho,mk)*dk;
+		sk = pow(rho, mk)*dk;
+		fit = fun(x);
+		dfun(yk, x);
+		yk = yk - gk;
+		if(yk.transpose() * sk >0)
+		{
+			Bk = Bk - (Bk*sk*sk.transpose()*Bk)/(sk.transpose()*Bk*sk) + (yk*yk.transpose())/(yk.transpose()*sk);
+		}
+
+		x0 = x;
+		k++;
+	}
+	input = x0;
 }

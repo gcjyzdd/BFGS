@@ -37,7 +37,13 @@ using namespace Eigen;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-typedef std::function<double(VectorXd &)> Cost_Fun;
+// ref: http://en.cppreference.com/w/cpp/utility/functional/function
+
+// input is the position(parameter)
+// Add const to avoid error of invalid initialization of non-const reference
+typedef std::function<double(VectorXd const &)> Cost_Fun;
+// param1: returned gradient
+// param2: input position
 typedef std::function<void(VectorXd &, VectorXd &)> Diff_Fun;
 
 
