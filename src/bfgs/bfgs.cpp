@@ -32,7 +32,7 @@
 #include "bfgs.hpp"
 
 
-void BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
+double BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 {
 	size_t n = input.size();
 
@@ -58,7 +58,7 @@ void BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 		{
 			bad++;
 		}
-		std::cout<<"k = "<<k<<" fit = "<< fit<<std::endl;
+		//std::cout<<"k = "<<k<<" fit = "<< fit<<std::endl;
 		dfun(gk, x0);
 		if(gk.norm() < epsilon){break;}
 		// Solve linear equations. Ref: https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
@@ -79,7 +79,7 @@ void BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 		}
 		x = x0 + pow(rho,mk)*dk;
 		sk = pow(rho, mk)*dk;
-		fit = fun(x);
+		//fit = fun(x);
 		dfun(yk, x);
 		yk = yk - gk;
 		if(yk.transpose() * sk >0)
@@ -91,4 +91,6 @@ void BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 		k++;
 	}
 	input = x0;
+	step = k;
+	return fit;
 }

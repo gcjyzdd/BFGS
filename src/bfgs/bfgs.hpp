@@ -28,9 +28,9 @@
 
 #include<functional>
 #include<iostream>
-#include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
-#include "Eigen-3.3/Eigen/Dense"
+#include<Eigen/Core>
+#include<Eigen/QR>
+#include<Eigen/Dense>
 
 using namespace Eigen;
 
@@ -51,6 +51,7 @@ struct BFGS
 {
 	size_t MAX_STEP;
 	size_t stop_step;
+	size_t step;
 	double rho;
 	double sigma;
 	double epsilon;
@@ -61,13 +62,14 @@ struct BFGS
 	{
 		MAX_STEP = 500;
 		stop_step = 5;
+		step = 0;
 		rho = 0.55;
 		sigma = 0.4;
 		epsilon = 1e-5;
 		improved = false;
 	}
 
-	void solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
+	double solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
 };
 
 
