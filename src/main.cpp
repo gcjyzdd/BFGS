@@ -71,8 +71,20 @@ int main()
 	double cost;
 
 	VectorXd rst(mpc.m_setting.m * (mpc.m_setting.N - 1));
-	rst.fill(0.);
-	cost = solver.solve(cost_fun1,diff_fun1,rst);
+
+	std::chrono::steady_clock::time_point begin =
+			std::chrono::steady_clock::now();
+
+	for (size_t i = 0; i < iters; i++) {
+		rst.fill(0.);
+		cost = solver.solve(cost_fun1,diff_fun1,rst);
+	}
+	std::chrono::steady_clock::time_point end =
+			std::chrono::steady_clock::now();
+	std::cout << "Average Time difference = "
+			<< std::chrono::duration_cast<std::chrono::microseconds>(end -
+					begin).count() / 1000./(float)iters
+					<< "ms \n";
 
 	cout<<"cost = "<<cost<<", step = "<<solver.step<<endl;
 	return 0;
