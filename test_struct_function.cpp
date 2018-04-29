@@ -47,11 +47,11 @@ struct Fun1
 	Fun1()
 	{
 		m_x.resize(2);
-		m_x[0] = 1.;
-		m_x[1] = 1.;
+		m_x[0] = 0.;
+		m_x[1] = 0.;
 		d = 1e-8;
 	}
-	double cost(VectorXd &x)
+	double cost(VectorXd const &x)
 	{
 		return 100*pow(x[0]*x[0] - x[1],2) + pow(x[0] - 1.,2);
 	}
@@ -82,5 +82,7 @@ int main()
     Diff_Fun diff_fun1 = std::bind( &Fun1::diff, f1, _1,_2 );
 	//Cost_Fun fun1 = &f1.cost;
     solver.solve(cost_fun1,diff_fun1,f1.m_x);
+
+    cout<<f1.m_x<<endl;
 	return 0;
 }
