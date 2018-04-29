@@ -34,9 +34,9 @@
 
 #include <iostream>
 
-#include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
-#include "Eigen-3.3/Eigen/Dense"
+#include<Eigen/Core>
+#include<Eigen/QR>
+#include<Eigen/Dense>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -82,11 +82,6 @@ struct MPC_Argument
 	}
 };
 
-struct Motion_Model
-{
-
-};
-
 double getFitness(const MPC_Setting &setting, const MPC_Argument &arg, const VectorXd &input);
 void getGradient(VectorXd &grad,const MPC_Setting &setting, const MPC_Argument &arg, VectorXd &input, const double fit);
 void getHess(MatrixXd &hess,const MPC_Setting &setting, const MPC_Argument &arg, VectorXd &input, const double fit);
@@ -95,9 +90,28 @@ inline double polyval(const double *coeffs, double x)
 {
 	return coeffs[0] + coeffs[1] * x + coeffs[2] * x * x;
 }
+
 inline double pow2(double x)
 {
 	return x*x;
 }
+
+struct Motion_Model
+{
+	MPC_Argument m_arg;
+	MPC_Setting m_setting;
+
+	Motion_Model(){}
+
+	double cost(VectorXd const &x)
+	{
+		return getFitness(m_setting, m_arg, x);
+	}
+	void diff(VectorXd &diff, VectorXd &x)
+	{
+		double fit = cost(x);
+		getGradient(diff, m_setting, m_arg, x, fit);
+	}
+};
 
 #endif
