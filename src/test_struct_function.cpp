@@ -75,14 +75,31 @@ int main()
 	Fun1 f1;
 
 	// store a call to a member function and object
-    using std::placeholders::_1;
-    using std::placeholders::_2;
-    Cost_Fun cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
-    //std::function<double(VectorXd &)> cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
-    Diff_Fun diff_fun1 = std::bind( &Fun1::diff, f1, _1,_2 );
-	//Cost_Fun fun1 = &f1.cost;
-    solver.solve(cost_fun1,diff_fun1,f1.m_x);
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	Cost_Fun cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
+	//std::function<double(VectorXd &)> cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
+	Diff_Fun diff_fun1 = std::bind( &Fun1::diff, f1, _1,_2 );
 
-    cout<<f1.m_x<<endl;
+	int iters = 50;
+	double cost;
+	std::chrono::steady_clock::time_point begin =
+			std::chrono::steady_clock::now();
+
+	for (size_t i = 0; i < iters; i++) {
+		f1.m_x[0] = 0;
+		f1.m_x[1] = 0;
+		cost = solver.solve(cost_fun1,diff_fun1,f1.m_x);
+	}
+
+	std::chrono::steady_clock::time_point end =
+			std::chrono::steady_clock::now();
+	std::cout << "Average Time difference = "
+			<< std::chrono::duration_cast<std::chrono::microseconds>(end -
+					begin).count() / 1000./(float)iters
+					<< "ms \n";
+
+	cout<<"cost = "<<cost<<", step = "<<solver.step<<endl;
+	cout<<"x = "<<f1.m_x.transpose()<<endl;
 	return 0;
 }
