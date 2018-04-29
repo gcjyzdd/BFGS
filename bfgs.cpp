@@ -60,7 +60,8 @@ void BFGS::solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 		}
 		std::cout<<"k = "<<k<<" fit = "<< fit<<std::endl;
 		dfun(gk, x0);
-		// TODO stop criteria
+		if(gk.norm() < epsilon){break;}
+		// Solve linear equations. Ref: https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
 		dk = Bk.fullPivHouseholderQr().solve(-gk);
 		// Armijo search
 		int m = 0;
