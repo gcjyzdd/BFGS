@@ -40,22 +40,21 @@
 using namespace std;
 
 
-struct Fun1
+struct Fun1: public NonConstraintObj
 {
-	VectorXd m_x;
 	double d;
-	Fun1()
+	Fun1(size_t n)
 	{
-		m_x.resize(2);
+		m_x.resize(n);
 		m_x[0] = 0.;
 		m_x[1] = 0.;
 		d = 1e-8;
 	}
-	double cost(VectorXd const &x)
+	virtual double cost(VectorXd const &x) override
 	{
 		return 100*pow(x[0]*x[0] - x[1],2) + pow(x[0] - 1.,2);
 	}
-	void diff(VectorXd &diff, VectorXd &x)
+	virtual void grad(VectorXd &diff, VectorXd &x) override
 	{
 		diff.resize(x.size());
 		diff.fill(0.);
@@ -72,15 +71,19 @@ struct Fun1
 int main()
 {
 	BFGS solver;
-	Fun1 f1;
+	//NonConstraintObj *ptr = new Fun1(2);
+	Fun1 f1(2);
+	cout<<"ptr->cost(ptr->m_x) = "<< f1.cost(f1.m_x)<<endl;
+	cout<<"ptr->cost(ptr->m_x) = "<< f1.NonConstraintObj::cost(f1.m_x)<<endl;
 
-	// store a call to a member function and object
-	using std::placeholders::_1;
-	using std::placeholders::_2;
-	Cost_Fun cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
-	//std::function<double(VectorXd &)> cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
-	Diff_Fun diff_fun1 = std::bind( &Fun1::diff, f1, _1,_2 );
+	std::function<double(NonConstraintObj&,VectorXd const &)> aa;
+    auto greet = std::mem_fn(&NonConstraintObj::cost);
+	aa = std::mem_fn(&NonConstraintObj::cost);
+    cout<<"type = "<< typeid(greet).name()<<endl;
+    cout<<"greet(f1, f1.m_x) = " <<greet(f1, f1.m_x)<<endl;
+    cout<<"greet(f1, f1.m_x) = " <<aa(f1, f1.m_x)<<endl;
 
+	solver.init(f1);
 	int iters = 50;
 	double cost;
 	std::chrono::steady_clock::time_point begin =
@@ -89,7 +92,7 @@ int main()
 	for (size_t i = 0; i < iters; i++) {
 		f1.m_x[0] = 0;
 		f1.m_x[1] = 0;
-		cost = solver.solve(cost_fun1,diff_fun1,f1.m_x);
+		cost = solver.solve(f1.m_x);
 	}
 
 	std::chrono::steady_clock::time_point end =

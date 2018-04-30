@@ -46,6 +46,20 @@ typedef std::function<double(VectorXd const &)> Cost_Fun;
 // param2: input position
 typedef std::function<void(VectorXd &, VectorXd &)> Diff_Fun;
 
+struct NonConstraintObj
+{
+	VectorXd m_x;
+	size_t m_n;
+	NonConstraintObj()
+	{
+		m_n = 1;
+		m_x.resize(m_n);
+		m_x.fill(0.);
+	}
+	virtual ~NonConstraintObj() = default;
+	virtual double cost(VectorXd const&x){return 0.;};
+	virtual void grad(VectorXd &grad, VectorXd &x){};
+};
 
 struct BFGS
 {
@@ -57,7 +71,10 @@ struct BFGS
 	double epsilon;
 
 	bool improved;
+	bool initialized;
 
+	Cost_Fun cost_fun;
+	Diff_Fun grad_fun;
 	BFGS()
 	{
 		MAX_STEP = 500;
@@ -67,9 +84,30 @@ struct BFGS
 		sigma = 0.4;
 		epsilon = 1e-5;
 		improved = false;
+		initialized = false;
 	}
-
-	double solve( Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
+	void init(NonConstraintObj &obj)
+	{
+		// store a call to a member function and object
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+		cost_fun = std::bind( &NonConstraintObj::cost, obj, _1 );
+		grad_fun = std::bind( &NonConstraintObj::grad, obj, _1,_2 );
+		initialized = true;
+	}
+	double solve_( Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
+	double solve(VectorXd &input)
+	{
+		if(initialized)
+		{
+			return solve_(cost_fun, grad_fun, input);
+		}
+		else
+		{
+			printf("BFGS is not initialized! Return zeros.\n");
+			return 1e9;
+		}
+	}
 };
 
 
