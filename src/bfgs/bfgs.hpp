@@ -27,6 +27,7 @@
 #define __BFGS_HPP__
 
 #include<functional>
+#include<memory>
 #include<iostream>
 #include<Eigen/Core>
 #include<Eigen/QR>
@@ -50,6 +51,7 @@ struct NonConstraintObj
 {
 	VectorXd m_x;
 	size_t m_n;
+
 	NonConstraintObj()
 	{
 		m_n = 1;
@@ -57,9 +59,10 @@ struct NonConstraintObj
 		m_x.fill(0.);
 	}
 	virtual ~NonConstraintObj() = default;
-	virtual double cost(VectorXd const&x){return 0.;};
-	virtual void grad(VectorXd &grad, VectorXd &x){};
+	virtual double cost(VectorXd const&x) =0;
+	virtual void grad(VectorXd &grad, VectorXd &x)=0;
 };
+
 
 struct BFGS
 {
@@ -75,6 +78,8 @@ struct BFGS
 
 	Cost_Fun cost_fun;
 	Diff_Fun grad_fun;
+
+	std::shared_ptr<NonConstraintObj> funPtr;
 	BFGS()
 	{
 		MAX_STEP = 500;
@@ -85,14 +90,15 @@ struct BFGS
 		epsilon = 1e-5;
 		improved = false;
 		initialized = false;
+		funPtr = nullptr;
 	}
-	void init(NonConstraintObj &obj)
+	template<class T> void init(T &obj)
 	{
 		// store a call to a member function and object
 		using std::placeholders::_1;
 		using std::placeholders::_2;
-		cost_fun = std::bind( &NonConstraintObj::cost, obj, _1 );
-		grad_fun = std::bind( &NonConstraintObj::grad, obj, _1,_2 );
+		cost_fun = std::bind( &T::cost, obj, _1 );
+		grad_fun = std::bind( &T::grad, obj, _1,_2 );
 		initialized = true;
 	}
 	double solve_( Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
@@ -109,6 +115,5 @@ struct BFGS
 		}
 	}
 };
-
 
 #endif

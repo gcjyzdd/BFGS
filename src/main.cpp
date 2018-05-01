@@ -61,11 +61,7 @@ int main()
 	mpc.m_setting.dt = 0.05;
 	mpc.m_arg.ref_v = 40;
 
-	using std::placeholders::_1;
-	using std::placeholders::_2;
-	Cost_Fun cost_fun1 = std::bind( &Motion_Model::cost, mpc, _1 );
-	//std::function<double(VectorXd &)> cost_fun1 = std::bind( &Fun1::cost, f1, _1 );
-	Diff_Fun diff_fun1 = std::bind( &Motion_Model::diff, mpc, _1,_2 );
+	solver.init<Motion_Model>(mpc);
 
 	int iters = 50;
 	double cost;
@@ -77,7 +73,7 @@ int main()
 
 	for (size_t i = 0; i < iters; i++) {
 		rst.fill(0.);
-		cost = solver.solve(cost_fun1,diff_fun1,rst);
+		cost = solver.solve(rst);
 	}
 	std::chrono::steady_clock::time_point end =
 			std::chrono::steady_clock::now();

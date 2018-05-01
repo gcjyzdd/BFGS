@@ -38,6 +38,8 @@
 #include<Eigen/QR>
 #include<Eigen/Dense>
 
+#include "bfgs.hpp"
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -96,7 +98,7 @@ inline double pow2(double x)
 	return x*x;
 }
 
-struct Motion_Model
+struct Motion_Model:public NonConstraintObj
 {
 	MPC_Argument m_arg;
 	MPC_Setting m_setting;
@@ -107,7 +109,7 @@ struct Motion_Model
 	{
 		return getFitness(m_setting, m_arg, x);
 	}
-	void diff(VectorXd &diff, VectorXd &x)
+	void grad(VectorXd &diff, VectorXd &x)
 	{
 		double fit = cost(x);
 		getGradient(diff, m_setting, m_arg, x, fit);

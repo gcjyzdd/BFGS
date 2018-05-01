@@ -50,11 +50,13 @@ struct Fun1: public NonConstraintObj
 		m_x[1] = 0.;
 		d = 1e-8;
 	}
-	virtual double cost(VectorXd const &x) override
+
+	double cost(VectorXd const &x)
 	{
 		return 100*pow(x[0]*x[0] - x[1],2) + pow(x[0] - 1.,2);
 	}
-	virtual void grad(VectorXd &diff, VectorXd &x) override
+
+	void grad(VectorXd &diff, VectorXd &x)
 	{
 		diff.resize(x.size());
 		diff.fill(0.);
@@ -68,22 +70,15 @@ struct Fun1: public NonConstraintObj
 	}
 };
 
+
 int main()
 {
 	BFGS solver;
 	//NonConstraintObj *ptr = new Fun1(2);
 	Fun1 f1(2);
 	cout<<"ptr->cost(ptr->m_x) = "<< f1.cost(f1.m_x)<<endl;
-	cout<<"ptr->cost(ptr->m_x) = "<< f1.NonConstraintObj::cost(f1.m_x)<<endl;
 
-	std::function<double(NonConstraintObj&,VectorXd const &)> aa;
-    auto greet = std::mem_fn(&NonConstraintObj::cost);
-	aa = std::mem_fn(&NonConstraintObj::cost);
-    cout<<"type = "<< typeid(greet).name()<<endl;
-    cout<<"greet(f1, f1.m_x) = " <<greet(f1, f1.m_x)<<endl;
-    cout<<"greet(f1, f1.m_x) = " <<aa(f1, f1.m_x)<<endl;
-
-	solver.init(f1);
+	solver.init<Fun1>(f1);
 	int iters = 50;
 	double cost;
 	std::chrono::steady_clock::time_point begin =
