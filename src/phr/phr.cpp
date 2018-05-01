@@ -45,5 +45,11 @@ double PHR::solve(Cost_Fun fun, Cost_Fun hf, Cost_Fun gf, Diff_Fun dfun, Diff_Co
 	double btak = 10.;
 	double btaold = 10.;
 
+	size_t k=0;
+	while(k<maxk && btak>epsilon)
+	{
+		// call bfgs to solve non-constraint sub-problem
+
+	}
 	return fit;
 }
