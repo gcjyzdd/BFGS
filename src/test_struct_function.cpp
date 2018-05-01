@@ -43,17 +43,19 @@ using namespace std;
 struct Fun1: public NonConstraintObj
 {
 	double d;
-	Fun1(size_t n)
+	double t_;
+	Fun1()
 	{
-		m_x.resize(n);
+		m_x.resize(2);
 		m_x[0] = 0.;
 		m_x[1] = 0.;
 		d = 1e-8;
+		t_ = 2.;
 	}
 
 	double cost(VectorXd const &x)
 	{
-		return 100*pow(x[0]*x[0] - x[1],2) + pow(x[0] - 1.,2);
+		return 100*pow(x[0]*x[0] - x[1],2) + pow(x[0] - 1.,2) + t_;
 	}
 
 	void grad(VectorXd &diff, VectorXd &x)
@@ -75,12 +77,26 @@ int main()
 {
 	BFGS solver;
 	//NonConstraintObj *ptr = new Fun1(2);
-	Fun1 f1(2);
+	Fun1 f1;
 	cout<<"ptr->cost(ptr->m_x) = "<< f1.cost(f1.m_x)<<endl;
 
 	solver.init<Fun1>(f1);
+	cout<<"b "<< solver.cost_fun(f1.m_x)<<endl;
+	f1.t_ = 3.;
+	solver.init<Fun1>(f1);
+	cout<<"a "<< solver.cost_fun(f1.m_x)<<endl;
+
 	int iters = 50;
 	double cost;
+
+	// test the template function bfgs
+	f1.m_x[0] = 0;
+	f1.m_x[1] = 0;
+	cost = bfgs<Fun1>(std::make_shared<Fun1>(f1), f1.m_x);
+	cout<<"cost = "<<cost<<endl;
+	cout<<"x = "<<f1.m_x.transpose()<<endl;
+
+
 	std::chrono::steady_clock::time_point begin =
 			std::chrono::steady_clock::now();
 
@@ -88,6 +104,7 @@ int main()
 		f1.m_x[0] = 0;
 		f1.m_x[1] = 0;
 		cost = solver.solve(f1.m_x);
+		//cost = bfgs<Fun1>(std::make_shared<Fun1>(f1), f1.m_x);
 	}
 
 	std::chrono::steady_clock::time_point end =
