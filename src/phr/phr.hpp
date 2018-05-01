@@ -161,4 +161,47 @@ struct PHR
 	double solve(Cost_Fun fun, Cost_Fun hf, Cost_Fun gf, Diff_Fun dfun, Diff_Constraint_Fun dhf, Diff_Constraint_Fun dgf, VectorXd &x0);
 };
 
+/**
+ * Solve constraint nonlinear optimization using multiplier method of PHR.
+ * @param ptr A shared pointer to a function object. The object must define eight functions:
+ * 			  fun, hf, gf, dfun, dhf, dgf, mpsi, dmpsi
+ * @param x0 The input and output parameter
+ * @return Cost of the returned parameter
+ */
+template<class T>
+double multphr(std::shared_ptr<T> ptr, VectorXd &x0)
+{
+	// define parameters
+	size_t maxk = 500, k = 0, ink = 0, n, l, m;
+	double sigma = 2., eta = 2., theta = 0.8, epsilon = 1e-5;
+
+	VectorXd x = x0, he, gi;
+
+	ptr->hf(he, x);
+	ptr->gf(gi, x);
+
+	// get dimension
+	n = x.size();
+	l = he.size();
+	m = gi.size();
+
+	// initialize multipliers
+	VectorXd mu(l);
+	mu.fill(0.1);
+	VectorXd lambda(m);
+	lambda.fill(0.1);
+
+	double btak = 10.;
+	double btaold = 10.;
+
+	while(k<maxk && btak>epsilon)
+	{
+		// call bfgs to solve non-constraint sub-problem
+		bfgs<T>(ptr, x0);
+
+	}
+
+	return 0;
+}
+
 #endif
