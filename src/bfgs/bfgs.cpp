@@ -62,7 +62,7 @@ double BFGS::solve_( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 		dfun(gk, x0);
 		if(gk.norm() < epsilon){break;}
 		// Solve linear equations. Ref: https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
-		dk = Bk.fullPivHouseholderQr().solve(-gk);
+		dk = Bk.householderQr().solve(-gk);	// llt ?
 		// Armijo search
 		int m = 0;
 		int mk = 0;
