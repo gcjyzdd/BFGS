@@ -116,4 +116,60 @@ struct BFGS
 	}
 };
 
+template<class T>
+double bfgs(std::shared_ptr<T> ptr, VectorXd &x0)
+{
+	size_t maxk = 500, stop_step = 5;
+	double rho = 0.55, sigma = 0.4, epsilon = 1e-5;
+
+	size_t k = 0, n = x0.size();
+	MatrixXd Bk = MatrixXd::Identity(n ,n);
+
+	VectorXd gk, dk, sk, yk, x;
+	size_t m = 0, mk = 0, bad = 0;
+	double fit = 0., tmp = 0.;
+	double best = 1e10;
+	while(k<maxk && bad<stop_step)
+	{
+		fit = ptr->cost(x0);
+		if(fit < best - epsilon)
+		{
+			best = fit;
+			bad = 0;
+		}
+		else
+		{
+			bad++;
+		}
+		ptr->grad(gk, x0);
+		//std::cout<<"gk = "<<gk<<std::endl;
+		if(gk.norm() < epsilon){break;}
+		dk = Bk.householderQr().solve(-gk);	// llt ?
+		m = 0, mk = 0;
+
+		tmp = gk.transpose()*dk;
+		while(m < 100)
+		{
+			if( ptr->cost(x0+pow(rho,m)*dk) < (fit+sigma*pow(rho,m)*tmp) )
+			{
+				mk = m;
+				break;
+			}
+			m++;
+		}
+		x = x0 + pow(rho, mk)*dk;
+		sk = pow(rho, mk)*dk;
+		ptr->grad(yk, x);
+		yk = yk - gk;
+		if( yk.transpose() * sk > 0)
+		{
+			Bk = Bk - (Bk*sk*sk.transpose()*Bk)/(sk.transpose()*Bk*sk) + (yk*yk.transpose())/(yk.transpose()*sk);
+		}
+		x0 = x;
+		k++;
+	}
+	x0 = x;
+	return fit;
+}
+
 #endif
