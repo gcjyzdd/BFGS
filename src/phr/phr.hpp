@@ -177,13 +177,10 @@ double multphr(std::shared_ptr<T> ptr, VectorXd &x0)
 
 	VectorXd x = x0, he, gi;
 
-	ptr->hf(he, x);
-	ptr->gf(gi, x);
-
 	// get dimension
-	n = x.size();
-	l = he.size();
-	m = gi.size();
+	n = ptr->m_n;
+	l = ptr->m_l;
+	m = ptr->m_m;
 
 	// initialize multipliers
 	VectorXd mu(l);
