@@ -24,7 +24,7 @@
 //
 #include "phr.hpp"
 
-double PHR::solve(Cost_Fun fun, Cost_Fun hf, Cost_Fun gf, Diff_Fun dfun, Diff_Constraint_Fun dhf, Diff_Constraint_Fun dgf, VectorXd &x0)
+double PHR::solve(Cost_Fun fun, Constraint_Fun hf, Constraint_Fun gf, Diff_Fun dfun, Diff_Constraint_Fun dhf, Diff_Constraint_Fun dgf, VectorXd &x0)
 {
 	double fit = 0.;
 

@@ -62,9 +62,9 @@ struct ConstraintObj
 	// gradient of inequalities
 	virtual void dgf(MatrixXd &grad, VectorXd &x) = 0;
 	// mpsi
-	virtual double mpsi();
+	virtual double mpsi(VectorXd const &x, VectorXd &mu, VectorXd &lambda, double sigma) = 0;
 	// dmpsi
-	virtual void dmpsi();
+	virtual void dmpsi(VectorXd &grad, VectorXd &x, VectorXd &mu, VectorXd &lambda, double sigma) = 0;
 };
 
 double mpsi(VectorXd const &x,
@@ -98,7 +98,7 @@ double mpsi(VectorXd const &x,
 	return psi;
 }
 
-void dmpsi(VectorXd &dpsi, VectorXd const &x,
+void dmpsi(VectorXd &dpsi, VectorXd &x,
 		Cost_Fun fun, Constraint_Fun hf, Constraint_Fun gf,
 		Diff_Fun dfun, Diff_Constraint_Fun dhf, Diff_Constraint_Fun dgf,
 		VectorXd &mu, VectorXd lambda, double sigma)
@@ -158,7 +158,7 @@ struct PHR
 		initialized = true;
 	}
 
-	double solve(Cost_Fun fun, Cost_Fun hf, Cost_Fun gf, Diff_Fun dfun, Diff_Constraint_Fun dhf, Diff_Constraint_Fun dgf, VectorXd &x0);
+	double solve(Cost_Fun fun, Constraint_Fun hf, Constraint_Fun gf, Diff_Fun dfun, Diff_Constraint_Fun dhf, Diff_Constraint_Fun dgf, VectorXd &x0);
 };
 
 /**
@@ -194,14 +194,51 @@ double multphr(std::shared_ptr<T> ptr, VectorXd &x0)
 	double btak = 10.;
 	double btaold = 10.;
 
+	Cost_Fun cost_fun;
+	Diff_Fun diff_fun;
+
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+
+	BFGS bfgs_solver;
+	double tmp;
 	while(k<maxk && btak>epsilon)
 	{
-		// call bfgs to solve non-constraint sub-problem
-		bfgs<T>(ptr, x0);
+		cost_fun = [ptr, &mu, &lambda, &sigma](VectorXd const x){ return ptr->mpsi(x, mu, lambda, sigma);};
+		diff_fun = [ptr, &mu, &lambda, &sigma](VectorXd &grad, VectorXd &x){ ptr->dmpsi(grad, x, mu, lambda, sigma);};
+		bfgs_solver.solve_(cost_fun, diff_fun, x0);
 
+		x = x0;
+		ptr->hf(he, x);
+		ptr->gf(gi, x);
+		btak = 0.;
+		for(size_t i=0;i<l;i++)
+		{
+			btak += he[i]*he[i];
+		}
+		for(size_t i=0;i<m;i++)
+		{
+			tmp = std::min(gi[i], lambda[i]/sigma);
+			btak += tmp*tmp;
+		}
+		btak = std::sqrt(btak);
+
+		if (btak > epsilon)
+		{
+			if( (k>=2) && (btak > (theta*btaold)) )
+			{
+				sigma *= eta;
+			}
+			// update multiplier vector
+			for(size_t i=0;i<l;i++){ mu[i] -= sigma*he[i];}
+			for(size_t i=0;i<m;i++){ lambda[i] = std::max(0., lambda[i] - sigma*gi[i]);}
+		}
+		btaold = btak;
+		x0 = x;
+		k++;
 	}
 
-	return 0;
+	return ptr->cost(x0);
 }
 
 #endif
