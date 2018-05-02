@@ -163,5 +163,23 @@ int main()
 	cout<<"cost = "<<cost<<endl;
 	cout<<"x = "<< f1.m_x.transpose()<<endl;
 
+	BFGS solver;
+
+	begin = std::chrono::steady_clock::now();
+	for (size_t i = 0; i < iters; i++) {
+		f1.m_x[0] = 3.0;
+		f1.m_x[1] = 3.0;
+		cost = bfgs<TestFun>(std::make_shared<TestFun>(f1), f1.m_x);
+	}
+	end = std::chrono::steady_clock::now();
+
+	std::cout << "Average Time difference = "
+			<< std::chrono::duration_cast<std::chrono::microseconds>(end -
+					begin).count() / 1000./(float)iters
+					<< "ms \n";
+
+	cout<<"cost = "<<cost<<endl;
+	cout<<"x = "<< f1.m_x.transpose()<<endl;
+
 	return 0;
 }
