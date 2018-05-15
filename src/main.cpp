@@ -28,10 +28,10 @@
 //OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#include<iostream>
+#include <iostream>
 #include <chrono>
-#include<vector>
-#include<functional>
+#include <vector>
+#include <functional>
 #include <math.h>
 
 #include "mpc.hpp"
@@ -53,7 +53,7 @@ int main()
 	mpc.m_arg.psi = 0;
 	mpc.m_arg.v = 10;
 	mpc.m_arg.cte = polyval(mpc.m_arg.coeffs, mpc.m_arg.x) - mpc.m_arg.y;
-	mpc.m_arg.epsi = mpc.m_arg.psi - atan(mpc.m_arg.coeffs[1] + 2*mpc.m_arg.coeffs[2]);
+	mpc.m_arg.epsi = mpc.m_arg.psi - atan(mpc.m_arg.coeffs[1] + 2 * mpc.m_arg.coeffs[2]);
 
 	mpc.m_setting.N = 25;
 	mpc.m_setting.m = 2;
@@ -66,22 +66,41 @@ int main()
 	int iters = 50;
 	double cost;
 
+	std::vector<float> result(2 + mpc.m_setting.m * mpc.m_setting.N);
 	VectorXd rst(mpc.m_setting.m * (mpc.m_setting.N - 1));
 
-	std::chrono::steady_clock::time_point begin =
-			std::chrono::steady_clock::now();
-
-	for (size_t i = 0; i < iters; i++) {
+	// Test speed of two versions. They have similar performance.
+	auto begin = std::chrono::steady_clock::now();
+	for (size_t i = 0; i < iters; i++)
+	{
 		rst.fill(0.);
 		cost = solver.solve(rst);
 	}
-	std::chrono::steady_clock::time_point end =
-			std::chrono::steady_clock::now();
-	std::cout << "Average Time difference = "
-			<< std::chrono::duration_cast<std::chrono::microseconds>(end -
-					begin).count() / 1000./(float)iters
-					<< "ms \n";
+	auto end = std::chrono::steady_clock::now();
+	std::cout << "Bind average Time difference = "
+			  << std::chrono::duration_cast<std::chrono::microseconds>(end -
+																	   begin)
+						 .count() /
+					 1000. / (float)iters
+			  << "ms \n";
 
-	cout<<"cost = "<<cost<<", step = "<<solver.step<<endl;
+	cout << "cost = " << cost << ", step = " << solver.step << endl;
+	BFGS_V2 bfgs2;
+	begin = std::chrono::steady_clock::now();
+
+	for (size_t i = 0; i < iters; i++)
+	{
+		rst.fill(0.);
+		cost = bfgs2.bfgs<Motion_Model>(std::make_shared<Motion_Model>(mpc), rst);
+	}
+	end = std::chrono::steady_clock::now();
+	std::cout << "Template average Time difference = "
+			  << std::chrono::duration_cast<std::chrono::microseconds>(end -
+																	   begin)
+						 .count() /
+					 1000. / (float)iters
+			  << "ms \n";
+
+	cout << "cost = " << cost << endl;
 	return 0;
 }
