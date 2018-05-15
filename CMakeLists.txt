@@ -35,7 +35,7 @@ cmake_minimum_required (VERSION 3.5)
 
 #Flags for compiler
 IF(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O3")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -O3 -mavx2 -mfma -march=native -pg")
 ENDIF()
 
 

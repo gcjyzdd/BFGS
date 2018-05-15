@@ -26,12 +26,12 @@
 #ifndef __BFGS_HPP__
 #define __BFGS_HPP__
 
-#include<functional>
-#include<memory>
-#include<iostream>
-#include<Eigen/Core>
-#include<Eigen/QR>
-#include<Eigen/Dense>
+#include <functional>
+#include <memory>
+#include <iostream>
+#include <Eigen/Core>
+#include <Eigen/QR>
+#include <Eigen/Dense>
 
 using namespace Eigen;
 
@@ -59,10 +59,9 @@ struct NonConstraintObj
 		m_x.fill(0.);
 	}
 	virtual ~NonConstraintObj() = default;
-	virtual double cost(VectorXd const&x) =0;
-	virtual void grad(VectorXd &grad, VectorXd &x)=0;
+	virtual double cost(VectorXd const &x) = 0;
+	virtual void grad(VectorXd &grad, VectorXd &x) = 0;
 };
-
 
 struct BFGS
 {
@@ -92,19 +91,20 @@ struct BFGS
 		initialized = false;
 		funPtr = nullptr;
 	}
-	template<class T> void init(T &obj)
+	template <class T>
+	void init(T &obj)
 	{
 		// store a call to a member function and object
 		using std::placeholders::_1;
 		using std::placeholders::_2;
-		cost_fun = std::bind( &T::cost, obj, _1 );
-		grad_fun = std::bind( &T::grad, obj, _1,_2 );
+		cost_fun = std::bind(&T::cost, obj, _1);
+		grad_fun = std::bind(&T::grad, obj, _1, _2);
 		initialized = true;
 	}
-	double solve_( Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
+	double solve_(Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
 	double solve(VectorXd &input)
 	{
-		if(initialized)
+		if (initialized)
 		{
 			return solve_(cost_fun, grad_fun, input);
 		}
@@ -116,60 +116,73 @@ struct BFGS
 	}
 };
 
-template<class T>
-double bfgs(std::shared_ptr<T> ptr, VectorXd &x0)
+struct BFGS_V2
 {
-	size_t maxk = 500, stop_step = 5;
-	double rho = 0.55, sigma = 0.4, epsilon = 1e-5;
+	//double *Bk;
 
-	size_t k = 0, n = x0.size();
-	MatrixXd Bk = MatrixXd::Identity(n ,n);
-
-	VectorXd gk, dk, sk, yk, x;
-	size_t m = 0, mk = 0, bad = 0;
-	double fit = 0., tmp = 0.;
-	double best = 1e10;
-	while(k<maxk && bad<stop_step)
+	BFGS_V2()
 	{
-		fit = ptr->cost(x0);
-		if(fit < best - epsilon)
-		{
-			best = fit;
-			bad = 0;
-		}
-		else
-		{
-			bad++;
-		}
-		ptr->grad(gk, x0);
-		//std::cout<<"gk = "<<gk<<std::endl;
-		if(gk.norm() < epsilon){break;}
-		dk = Bk.householderQr().solve(-gk);	// llt ?
-		m = 0, mk = 0;
+		//Bk = nullptr;
+		//cudaMalloc((void **)&Bk, sizeof(double)*3);
+	}
+	template <class T>
+	static double bfgs(std::shared_ptr<T> ptr, VectorXd &x0)
+	{
+		size_t maxk = 500, stop_step = 5;
+		double rho = 0.55, sigma = 0.4, epsilon = 1e-5;
 
-		tmp = gk.transpose()*dk;
-		while(m < 100)
+		size_t k = 0, n = x0.size();
+		MatrixXd Bk = MatrixXd::Identity(n, n);
+
+		VectorXd gk, dk, sk, yk, x;
+		size_t m = 0, mk = 0, bad = 0;
+		double fit = 0., tmp = 0.;
+		double best = 1e10;
+		while (k < maxk && bad < stop_step)
 		{
-			if( ptr->cost(x0+pow(rho,m)*dk) < (fit+sigma*pow(rho,m)*tmp) )
+			fit = ptr->cost(x0);
+			if (fit < best - epsilon)
 			{
-				mk = m;
+				best = fit;
+				bad = 0;
+			}
+			else
+			{
+				bad++;
+			}
+			ptr->grad(gk, x0);
+			//std::cout<<"gk = "<<gk<<std::endl;
+			if (gk.norm() < epsilon)
+			{
 				break;
 			}
-			m++;
-		}
-		x = x0 + pow(rho, mk)*dk;
-		sk = pow(rho, mk)*dk;
-		ptr->grad(yk, x);
-		yk = yk - gk;
-		if( yk.transpose() * sk > 0)
-		{
-			Bk = Bk - (Bk*sk*sk.transpose()*Bk)/(sk.transpose()*Bk*sk) + (yk*yk.transpose())/(yk.transpose()*sk);
+			dk = Bk.householderQr().solve(-gk); // llt ?
+			m = 0, mk = 0;
+
+			tmp = gk.transpose() * dk;
+			while (m < 100)
+			{
+				if (ptr->cost(x0 + pow(rho, m) * dk) < (fit + sigma * pow(rho, m) * tmp))
+				{
+					mk = m;
+					break;
+				}
+				m++;
+			}
+			x = x0 + pow(rho, mk) * dk;
+			sk = pow(rho, mk) * dk;
+			ptr->grad(yk, x);
+			yk = yk - gk;
+			if (yk.transpose() * sk > 0)
+			{
+				Bk = Bk - (Bk * sk * sk.transpose() * Bk) / (sk.transpose() * Bk * sk) + (yk * yk.transpose()) / (yk.transpose() * sk);
+			}
+			x0 = x;
+			k++;
 		}
 		x0 = x;
-		k++;
+		return fit;
 	}
-	x0 = x;
-	return fit;
-}
+};
 
 #endif
