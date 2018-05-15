@@ -28,10 +28,10 @@
 //OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#include<iostream>
+#include <iostream>
 #include <chrono>
-#include<vector>
-#include<functional>
+#include <vector>
+#include <functional>
 #include <math.h>
 
 #include "phr.hpp"
@@ -39,7 +39,7 @@
 
 using namespace std;
 
-struct TestFun: public ConstraintObj
+struct TestFun : public ConstraintObj
 {
 	double d;
 	TestFun()
@@ -62,38 +62,38 @@ struct TestFun: public ConstraintObj
 		diff.resize(x.size());
 		diff.fill(0.);
 		double fit = cost(x);
-		for(size_t i=0;i<x.size();i++)
+		for (size_t i = 0; i < x.size(); i++)
 		{
-			x[i] = x[i]+d;
-			diff[i] = (cost(x) - fit)/d;
-			x[i] = x[i]-d;
+			x[i] = x[i] + d;
+			diff[i] = (cost(x) - fit) / d;
+			x[i] = x[i] - d;
 		}
 	}
 
 	void hf(VectorXd &value, VectorXd const &x)
 	{
 		value.resize(m_l);
-		value[0] = x[0] - 2.*x[1] + 1.;
+		value[0] = x[0] - 2. * x[1] + 1.;
 	}
 
 	void gf(VectorXd &value, VectorXd const &x)
 	{
 		value.resize(m_m);
-		value[0] = -0.25 * x[0] * x[0] - x[1]*x[1] + 1.;
+		value[0] = -0.25 * x[0] * x[0] - x[1] * x[1] + 1.;
 	}
 
 	void dhf(MatrixXd &grad, VectorXd &x)
 	{
 		grad.resize(m_n, m_l);
-		grad(0,0) = 1.;
-		grad(1,0) = -2.;
+		grad(0, 0) = 1.;
+		grad(1, 0) = -2.;
 	}
 
 	void dgf(MatrixXd &grad, VectorXd &x)
 	{
 		grad.resize(m_n, m_m);
-		grad(0,0) = -0.5* x[0];
-		grad(1,0) = -2.* x[1];
+		grad(0, 0) = -0.5 * x[0];
+		grad(1, 0) = -2. * x[1];
 	}
 
 	double mpsi(VectorXd const &x, VectorXd &mu, VectorXd &lambda, double sigma)
@@ -108,19 +108,19 @@ struct TestFun: public ConstraintObj
 		double s1 = 0.;
 		double psi = f;
 
-		for(size_t i=0;i<l;i++)
+		for (size_t i = 0; i < l; i++)
 		{
 			psi = psi - he[i] * mu[i];
-			s1 = s1 + he[i]*he[i];
+			s1 = s1 + he[i] * he[i];
 		}
-		psi += 0.5*sigma*s1;
-		double s2 = 0., s3=0.;
-		for(size_t i=0;i<m;i++)
+		psi += 0.5 * sigma * s1;
+		double s2 = 0., s3 = 0.;
+		for (size_t i = 0; i < m; i++)
 		{
-			s3 = std::max(0., lambda[i] - sigma*gi[i]);
-			s2 += s3*s3 - lambda[i]*lambda[i];
+			s3 = std::max(0., lambda[i] - sigma * gi[i]);
+			s2 += s3 * s3 - lambda[i] * lambda[i];
 		}
-		psi += s2/(2. * sigma);
+		psi += s2 / (2. * sigma);
 		return psi;
 	}
 
@@ -134,9 +134,9 @@ struct TestFun: public ConstraintObj
 		dhf(dhe, x);
 		dgf(dgi, x);
 
-		dpsi = dpsi + (sigma*he[0] - mu[0])*dhe.col(0);
+		dpsi = dpsi + (sigma * he[0] - mu[0]) * dhe.col(0);
 
-		dpsi = dpsi + (sigma*gi[0] - lambda[0])*dgi.col(0);
+		dpsi = dpsi + (sigma * gi[0] - lambda[0]) * dgi.col(0);
 	}
 };
 
@@ -148,7 +148,8 @@ int main()
 	double cost;
 	auto begin = std::chrono::steady_clock::now();
 
-	for (size_t i = 0; i < iters; i++) {
+	for (size_t i = 0; i < iters; i++)
+	{
 		f1.m_x[0] = 3.0;
 		f1.m_x[1] = 3.0;
 		cost = multphr<TestFun>(std::make_shared<TestFun>(f1), f1.m_x);
@@ -156,30 +157,35 @@ int main()
 	auto end = std::chrono::steady_clock::now();
 
 	std::cout << "Average Time difference = "
-			<< std::chrono::duration_cast<std::chrono::microseconds>(end -
-					begin).count() / 1000./(float)iters
-					<< "ms \n";
+			  << std::chrono::duration_cast<std::chrono::microseconds>(end -
+																	   begin)
+						 .count() /
+					 1000. / (float)iters
+			  << "ms \n";
 
-	cout<<"cost = "<<cost<<endl;
-	cout<<"x = "<< f1.m_x.transpose()<<endl;
+	cout << "cost = " << cost << endl;
+	cout << "x = " << f1.m_x.transpose() << endl;
 
 	BFGS solver;
 
 	begin = std::chrono::steady_clock::now();
-	for (size_t i = 0; i < iters; i++) {
+	for (size_t i = 0; i < iters; i++)
+	{
 		f1.m_x[0] = 3.0;
 		f1.m_x[1] = 3.0;
-		cost = bfgs<TestFun>(std::make_shared<TestFun>(f1), f1.m_x);
+		cost = BFGS_V2::bfgs<TestFun>(std::make_shared<TestFun>(f1), f1.m_x);
 	}
 	end = std::chrono::steady_clock::now();
 
 	std::cout << "Average Time difference = "
-			<< std::chrono::duration_cast<std::chrono::microseconds>(end -
-					begin).count() / 1000./(float)iters
-					<< "ms \n";
+			  << std::chrono::duration_cast<std::chrono::microseconds>(end -
+																	   begin)
+						 .count() /
+					 1000. / (float)iters
+			  << "ms \n";
 
-	cout<<"cost = "<<cost<<endl;
-	cout<<"x = "<< f1.m_x.transpose()<<endl;
+	cout << "cost = " << cost << endl;
+	cout << "x = " << f1.m_x.transpose() << endl;
 
 	return 0;
 }

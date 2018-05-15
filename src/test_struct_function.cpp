@@ -92,7 +92,8 @@ int main()
 	// test the template function bfgs
 	f1.m_x[0] = 0;
 	f1.m_x[1] = 0;
-	cost = bfgs<Fun1>(std::make_shared<Fun1>(f1), f1.m_x);
+	BFGS_V2 bfgs2;
+	cost = bfgs2.bfgs<Fun1>(std::make_shared<Fun1>(f1), f1.m_x);
 	cout<<"cost = "<<cost<<endl;
 	cout<<"x = "<<f1.m_x.transpose()<<endl;
 
