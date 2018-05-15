@@ -34,9 +34,9 @@
 
 #include <iostream>
 
-#include<Eigen/Core>
-#include<Eigen/QR>
-#include<Eigen/Dense>
+#include <Eigen/Core>
+#include <Eigen/QR>
+#include <Eigen/Dense>
 
 #include "bfgs.hpp"
 
@@ -47,21 +47,21 @@ using Eigen::VectorXd;
 
 struct MPC_Setting
 {
-	double Lf;	// COG to front wheel
-	double Lr;  	// COG to rear wheel
+	double Lf; // COG to front wheel
+	double Lr; // COG to rear wheel
 
-	double dt;	// sample time
-	size_t N;	// horizon
+	double dt; // sample time
+	size_t N;  // horizon
 
-	size_t n; 	// dimension of state
-	size_t m;	// dimension of input
+	size_t n; // dimension of state
+	size_t m; // dimension of input
 
 	MPC_Setting()
 	{
 		Lf = 1.17;
 		Lr = 1.77;
 
-		dt = 1/100.;
+		dt = 1 / 100.;
 		N = 25;
 
 		n = 6;
@@ -71,7 +71,7 @@ struct MPC_Setting
 
 struct MPC_Argument
 {
-	double x, y, psi, v, cte, epsi;	// initial state
+	double x, y, psi, v, cte, epsi; // initial state
 	double ref_v;
 	double latency;
 	double coeffs[3];
@@ -79,14 +79,15 @@ struct MPC_Argument
 	MPC_Argument()
 	{
 		x = y = psi = v = cte = epsi = 0.;
-		ref_v = 40/3.6;
-		latency = 1/1000. * 10;
+		ref_v = 40 / 3.6;
+		latency = 1 / 1000. * 10;
 	}
 };
 
 double getFitness(const MPC_Setting &setting, const MPC_Argument &arg, const VectorXd &input);
-void getGradient(VectorXd &grad,const MPC_Setting &setting, const MPC_Argument &arg, VectorXd &input, const double fit);
-void getHess(MatrixXd &hess,const MPC_Setting &setting, const MPC_Argument &arg, VectorXd &input, const double fit);
+void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg, const VectorXd &input, std::vector<float> &result);
+void getGradient(VectorXd &grad, const MPC_Setting &setting, const MPC_Argument &arg, VectorXd &input, const double fit);
+void getHess(MatrixXd &hess, const MPC_Setting &setting, const MPC_Argument &arg, VectorXd &input, const double fit);
 
 inline double polyval(const double *coeffs, double x)
 {
@@ -95,15 +96,15 @@ inline double polyval(const double *coeffs, double x)
 
 inline double pow2(double x)
 {
-	return x*x;
+	return x * x;
 }
 
-struct Motion_Model:public NonConstraintObj
+struct Motion_Model : public NonConstraintObj
 {
 	MPC_Argument m_arg;
 	MPC_Setting m_setting;
 
-	Motion_Model(){}
+	Motion_Model() {}
 
 	double cost(VectorXd const &x)
 	{
