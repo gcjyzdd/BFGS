@@ -104,7 +104,7 @@ void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg,
 	// TODO: make each element continous such that it can copy memory easily
 
 	// Only store x and y. Other states are not required to calculate x and y.
-	if (result.size() < (2 + 2 * setting.N))
+	if (result.size() < (2 + setting.n * setting.N))
 	{
 		std::cerr << "The size of result is not initialized correctly.\n";
 	}
@@ -115,6 +115,10 @@ void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg,
 	size_t N = setting.N;
 	size_t x_start = 2;
 	size_t y_start = x_start + N;
+	size_t psi_start = y_start + N;
+	size_t v_start = psi_start + N;
+	size_t cte_start = v_start + N;
+	size_t epsi_start = cte_start + N;
 
 	VectorXd state0;
 	VectorXd state1;
@@ -128,9 +132,15 @@ void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg,
 	state0[1] = arg.y;
 	state0[2] = arg.psi;
 	state0[3] = arg.v;
+	state0[4] = arg.cte;
+	state0[5] = arg.epsi;
 
 	result[x_start] = state0[0];
 	result[y_start] = state0[1];
+	result[psi_start] = state0[2];
+	result[v_start] = state0[3];
+	result[cte_start] = state0[4];
+	result[epsi_start] = state0[5];
 
 	double Lf = setting.Lf;
 	double dt = setting.dt;
@@ -142,14 +152,22 @@ void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg,
 		state1[1] = state0[1] + state0[3] * sin(state0[2]) * dt;
 		state1[2] = state0[2] + state0[3] * input[i] / Lf * dt;
 		state1[3] = state0[3] + input[N - 1 + i] * dt;
+		state1[4] = polyval(arg.coeffs, state0[0]) - state0[1] + state0[3] * sin(state0[5]) * dt;
+		state1[5] = state0[2] - atan(arg.coeffs[1] + 2 * arg.coeffs[2]) + state0[3] * input[i] / Lf * dt;
 
 		state0[0] = state1[0];
 		state0[1] = state1[1];
 		state0[2] = state1[2];
 		state0[3] = state1[3];
+		state0[4] = state1[4];
+		state0[5] = state1[5];
 
 		result[x_start + i + 1] = state0[0];
 		result[y_start + i + 1] = state0[1];
+		result[psi_start + i + 1] = state0[2];
+		result[v_start + i + 1] = state0[3];
+		result[cte_start + i + 1] = state0[4];
+		result[epsi_start + i + 1] = state0[5];
 	}
 }
 
