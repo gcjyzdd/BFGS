@@ -5,7 +5,7 @@ Implementation of Broyden, Fletcher, Goldfarb and Shanno's (BFGS) quasi Newton's
 
 ```sh
 git clone git@github.com:gcjyzdd/BFGS.git
-cd NFGS
+cd BFGS
 chmod +x test.sh
 ./test.sh
 ```
