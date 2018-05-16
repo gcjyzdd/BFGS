@@ -109,9 +109,6 @@ void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg,
 		std::cerr << "The size of result is not initialized correctly.\n";
 	}
 
-	result[0] = input[1]; // acc
-	result[1] = input[0]; // steer
-
 	size_t N = setting.N;
 	size_t x_start = 2;
 	size_t y_start = x_start + N;
@@ -119,6 +116,9 @@ void getPrediction(const MPC_Setting &setting, const MPC_Argument &arg,
 	size_t v_start = psi_start + N;
 	size_t cte_start = v_start + N;
 	size_t epsi_start = cte_start + N;
+
+	result[0] = input[N - 1]; // acc
+	result[1] = input[0];	 // steer
 
 	VectorXd state0;
 	VectorXd state1;
