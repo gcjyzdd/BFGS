@@ -181,6 +181,9 @@ struct BFGS_V2
 			k++;
 		}
 		x0 = x;
+		#ifdef DEBUG
+		std::cout << "BFGS stops at step " << k << std::endl;
+		#endif
 		return fit;
 	}
 };
