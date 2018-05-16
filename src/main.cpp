@@ -36,6 +36,9 @@
 
 #include "mpc.hpp"
 #include "bfgs.hpp"
+#include "matplotlibcpp.hpp"
+
+namespace plt = matplotlibcpp;
 
 using namespace std;
 
@@ -61,20 +64,45 @@ int main()
 	mpc.m_setting.dt = 0.05;
 	mpc.m_arg.ref_v = 40;
 
-	solver.init<Motion_Model>(mpc);
+	size_t N = mpc.m_setting.N;
+	
+	BFGS_V2 solver2;
 
 	int iters = 50;
 	double cost;
+	std::vector<float> x, y, psi, v, cte, epsi;
+	std::vector<float> delta_vals, a_vals;
 
-	std::vector<float> result(2 + mpc.m_setting.m * mpc.m_setting.N);
+	std::vector<float> result(2 + mpc.m_setting.n * mpc.m_setting.N);
 	VectorXd rst(mpc.m_setting.m * (mpc.m_setting.N - 1));
 
 	// Test speed of two versions. They have similar performance.
 	auto begin = std::chrono::steady_clock::now();
 	for (size_t i = 0; i < iters; i++)
 	{
-		rst.fill(0.);
-		cost = solver.solve(rst);
+		//rst.fill(0.);
+		//solver.init<Motion_Model>(mpc);
+		//cost = solver.solve(rst);
+		cost = solver2.bfgs<Motion_Model>(std::make_shared<Motion_Model>(mpc), rst);
+		getPrediction(mpc.m_setting, mpc.m_arg, rst, result);
+
+		// update initial state
+		mpc.m_arg.x = result[3];
+		mpc.m_arg.y = result[3 + N];
+		mpc.m_arg.psi = result[3 + 2 * N];
+		mpc.m_arg.v = result[3 + 3 * N];
+		mpc.m_arg.cte = result[3 + 4 * N];
+		mpc.m_arg.epsi = result[3 + 5 * N];
+
+		// store values
+		x.push_back(result[3]);
+		y.push_back(result[3 + N]);
+		psi.push_back(result[3 + 2 * N]);
+		v.push_back(result[3 + 3 * N]);
+		cte.push_back(result[3 + 4 * N]);
+		epsi.push_back(result[3 + 5 * N]);
+		delta_vals.push_back(result[1]);
+		a_vals.push_back(result[0]);
 	}
 	auto end = std::chrono::steady_clock::now();
 	std::cout << "Bind average Time difference = "
@@ -85,6 +113,30 @@ int main()
 			  << "ms \n";
 
 	cout << "cost = " << cost << ", step = " << solver.step << endl;
+
+	plt::subplot(5, 1, 1);
+	plt::title("CTE");
+	plt::plot(cte);
+
+	plt::subplot(5, 1, 2);
+	plt::title("Delta (Radians)");
+	plt::plot(delta_vals);
+
+	plt::subplot(5, 1, 3);
+	plt::title("Acc");
+	plt::plot(a_vals);
+
+	plt::subplot(5, 1, 4);
+	plt::title("Velocity");
+	plt::plot(v);
+
+	plt::subplot(5, 1, 5);
+	plt::title("Trajectory");
+	plt::plot(x, y);
+
+	plt::show();
+
+	return 0;
 	BFGS_V2 bfgs2;
 	begin = std::chrono::steady_clock::now();
 
