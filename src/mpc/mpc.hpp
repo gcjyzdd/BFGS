@@ -33,7 +33,7 @@
 #define __MPC_HPP__
 
 #include <iostream>
-
+#include <vector>
 #include <Eigen/Core>
 #include <Eigen/QR>
 #include <Eigen/Dense>
