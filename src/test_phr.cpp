@@ -157,11 +157,11 @@ int main()
 	auto end = std::chrono::steady_clock::now();
 
 	std::cout << "Average Time difference = "
-			  << std::chrono::duration_cast<std::chrono::microseconds>(end -
-																	   begin)
-						 .count() /
-					 1000. / (float)iters
-			  << "ms \n";
+		<< std::chrono::duration_cast<std::chrono::microseconds>(end -
+			begin)
+		.count() /
+		1000. / (float)iters
+		<< "ms \n";
 
 	cout << "cost = " << cost << endl;
 	cout << "x = " << f1.m_x.transpose() << endl;
@@ -178,14 +178,14 @@ int main()
 	end = std::chrono::steady_clock::now();
 
 	std::cout << "Average Time difference = "
-			  << std::chrono::duration_cast<std::chrono::microseconds>(end -
-																	   begin)
-						 .count() /
-					 1000. / (float)iters
-			  << "ms \n";
+		<< std::chrono::duration_cast<std::chrono::microseconds>(end -
+			begin)
+		.count() /
+		1000. / (float)iters
+		<< "ms \n";
 
 	cout << "cost = " << cost << endl;
 	cout << "x = " << f1.m_x.transpose() << endl;
-
+	std::getchar();
 	return 0;
 }
