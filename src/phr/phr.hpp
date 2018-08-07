@@ -238,6 +238,84 @@ double multphr(std::shared_ptr<T> ptr, VectorXd &x0)
 	return ptr->cost(x0);
 }
 
+/**
+* Solve constraint nonlinear optimization using multiplier method of PHR.
+* @param ptr A shared pointer to a function object. The object must define eight functions:
+* 			  fun, hf, gf, dfun, dhf, dgf, mpsi, dmpsi
+* @param x0 The input and output parameter
+* @return Cost of the returned parameter
+*/
+template<class T>
+double multphr_Hess(std::shared_ptr<T> ptr, VectorXd &x0)
+{
+	// define parameters
+	size_t maxk = 500, k = 0, ink = 0, n, l, m;
+	double sigma = 2., eta = 2., theta = 0.8, epsilon = 1e-5;
+
+	VectorXd x = x0, he, gi;
+
+	// get dimension
+	n = ptr->m_n;
+	l = ptr->m_l;
+	m = ptr->m_m;
+
+	// initialize multipliers
+	VectorXd mu(l);
+	mu.fill(0.1);
+	VectorXd lambda(m);
+	lambda.fill(0.1);
+
+	double btak = 10.;
+	double btaold = 10.;
+
+	Cost_Fun cost_fun;
+	Diff_Fun diff_fun;
+	Hess_Fun hess_fun;
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+
+	BFGS bfgs_solver;
+	double tmp;
+	while (k<maxk && btak>epsilon)
+	{
+		cost_fun = [ptr, &mu, &lambda, &sigma](VectorXd const x) { return ptr->mpsi(x, mu, lambda, sigma);};
+		diff_fun = [ptr, &mu, &lambda, &sigma](VectorXd &grad, VectorXd &x) { ptr->dmpsi(grad, x, mu, lambda, sigma);};
+		hess_fun = [ptr, &mu, &lambda, &sigma](MatrixXd &hess, VectorXd &x) { ptr->hmpsi(hess, x, mu, lambda, sigma);};
+		bfgs_solver.solve_(cost_fun, diff_fun, hess_fun, x0);
+
+		x = x0;
+		ptr->hf(he, x);
+		ptr->gf(gi, x);
+		btak = 0.;
+		for (size_t i = 0;i < l;i++)
+		{
+			btak += he[i] * he[i];
+		}
+		for (size_t i = 0;i < m;i++)
+		{
+			tmp = std::min(gi[i], lambda[i] / sigma);
+			btak += tmp * tmp;
+		}
+		btak = std::sqrt(btak);
+
+		if (btak > epsilon)
+		{
+			if ((k >= 2) && (btak > (theta*btaold)))
+			{
+				sigma *= eta;
+			}
+			// update multiplier vector
+			for (size_t i = 0;i < l;i++) { mu[i] -= sigma * he[i]; }
+			for (size_t i = 0;i < m;i++) { lambda[i] = std::max(0., lambda[i] - sigma * gi[i]); }
+		}
+		btaold = btak;
+		x0 = x;
+		k++;
+	}
+
+	return ptr->cost(x0);
+}
+
 namespace SISS {
 	// input is the position(parameter)
 	// Add const to avoid error of invalid initialization of non-const reference

@@ -106,6 +106,7 @@ struct BFGS
 		initialized = true;
 	}
 	double solve_(Cost_Fun fun, Diff_Fun dfun, VectorXd &input);
+	double solve_(Cost_Fun fun, Diff_Fun dfun, Hess_Fun hfun, VectorXd &input);
 	double solve(VectorXd &input)
 	{
 		if (initialized)

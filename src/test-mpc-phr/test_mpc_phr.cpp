@@ -566,8 +566,37 @@ void test2()
 	cout << "x = " << ldm.m_x.transpose() << endl;
 }
 
+void test3()
+{
+	SISS::LDM ldm;
+	int iters = 1;
+	double cost;
+	auto begin = std::chrono::steady_clock::now();
+
+	for (size_t i = 0; i < iters; i++)
+	{
+		for (int j = 0;j < ldm.settings.N; j++)
+		{
+			ldm.m_x[2 * ldm.settings.N + j] = 10.0;
+		}
+		cout << "x = " << ldm.m_x.transpose() << endl;
+		cost = multphr_Hess<SISS::LDM>(std::make_shared<SISS::LDM>(ldm), ldm.m_x);
+	}
+	auto end = std::chrono::steady_clock::now();
+
+	std::cout << "Average Time difference = "
+		<< std::chrono::duration_cast<std::chrono::microseconds>(end -
+			begin)
+		.count() /
+		1000. / (float)iters
+		<< "ms \n";
+
+	cout << "cost = " << cost << endl;
+	cout << "x = " << ldm.m_x.transpose() << endl;
+}
 int main()
 {
+	test3();
 	test2();
 	test1();
 	std::getchar();
