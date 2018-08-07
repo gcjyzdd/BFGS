@@ -46,6 +46,10 @@ typedef std::function<double(VectorXd const &)> Cost_Fun;
 // param1: returned gradient
 // param2: input position
 typedef std::function<void(VectorXd &, VectorXd &)> Diff_Fun;
+// param1: returned hessian matrix
+// param2: input position
+typedef std::function<void(MatrixXd &, VectorXd &)> Hess_Fun;
+
 
 struct NonConstraintObj
 {
