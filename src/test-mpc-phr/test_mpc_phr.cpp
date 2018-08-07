@@ -453,7 +453,10 @@ namespace SISS {
 
 			for (size_t i = 0;i < m;++i)
 			{
-				dpsi = dpsi + (sigma * gi[i] - lambda[i]) * dgi.col(i);
+				if (lambda[i]-sigma*gi[i]>0)
+				{
+					dpsi = dpsi + (sigma * gi[i] - lambda[i]) * dgi.col(i);
+				}
 			}
 		}
 	};

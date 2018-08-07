@@ -68,7 +68,7 @@ double BFGS::solve_( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 		int mk = 0;
 		double tmp;
 		tmp = gk.transpose()*dk;
-		while(m<8000)
+		while(m<100)
 		{
 			if( fun(x0+pow(rho,m)*dk) < (fit+sigma*pow(rho,m)*tmp) )
 			{
@@ -77,6 +77,7 @@ double BFGS::solve_( Cost_Fun fun, Diff_Fun dfun, VectorXd &input)
 			}
 			m++;
 		}
+		//std::cout << "m = " << m << std::endl;
 		x = x0 + pow(rho,mk)*dk;
 		sk = pow(rho, mk)*dk;
 		//fit = fun(x);
