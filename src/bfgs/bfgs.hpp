@@ -85,7 +85,7 @@ struct BFGS
 	std::shared_ptr<NonConstraintObj> funPtr;
 	BFGS()
 	{
-		MAX_STEP = 500;
+		MAX_STEP = 80;
 		stop_step = 5;
 		step = 0;
 		rho = 0.55;

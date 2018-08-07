@@ -249,7 +249,7 @@ template<class T>
 double multphr_Hess(std::shared_ptr<T> ptr, VectorXd &x0)
 {
 	// define parameters
-	size_t maxk = 500, k = 0, ink = 0, n, l, m;
+	size_t maxk = 40, k = 0, ink = 0, n, l, m;
 	double sigma = 2., eta = 2., theta = 0.8, epsilon = 1e-5;
 
 	VectorXd x = x0, he, gi;
