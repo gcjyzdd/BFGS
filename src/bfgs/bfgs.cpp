@@ -62,6 +62,7 @@ double BFGS::solve_(Cost_Fun fun, Diff_Fun dfun, Hess_Fun hfun, VectorXd &input)
 		//std::cout<<"k = "<<k<<" fit = "<< fit<<std::endl;
 		dfun(gk, x0);
 		if (gk.norm() < epsilon) { break; }
+		hfun(Bk, x0);
 		// Solve linear equations. Ref: https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html
 		dk = Bk.householderQr().solve(-gk);	// llt ?
 											// Armijo search
@@ -80,6 +81,7 @@ double BFGS::solve_(Cost_Fun fun, Diff_Fun dfun, Hess_Fun hfun, VectorXd &input)
 		}
 		//std::cout << "m = " << m << std::endl;
 		x = x0 + pow(rho, mk)*dk;
+		/*
 		sk = pow(rho, mk)*dk;
 		//fit = fun(x);
 		dfun(yk, x);
@@ -88,7 +90,7 @@ double BFGS::solve_(Cost_Fun fun, Diff_Fun dfun, Hess_Fun hfun, VectorXd &input)
 		{
 			Bk = Bk - (Bk*sk*sk.transpose()*Bk) / (sk.transpose()*Bk*sk) + (yk*yk.transpose()) / (yk.transpose()*sk);
 		}
-
+		*/
 		x0 = x;
 		k++;
 	}
