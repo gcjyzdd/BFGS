@@ -29,3 +29,7 @@ It takes `4.87416ms` to solve MPC per run on my PC.
 ## Dependencies
 
 Eigen-3.3 or later.
+
+## TODO
+
+Show a demo of comparison with the matlab example [Swing-up Control of a Pendulum Using Nonlinear Model Predictive Control](https://nl.mathworks.com/help/mpc/ug/swing-up-control-of-a-pendulum-using-nonlinear-model-predictive-control.html).
